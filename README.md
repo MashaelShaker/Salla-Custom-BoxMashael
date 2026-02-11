@@ -1,51 +1,63 @@
-**Salla Custom Box – Laravel Starter Kit**
+
+
+
+# Salla Custom Box – Laravel Starter Kit
 
 This repository contains the initial implementation of the Custom Box Builder for Salla, built using Laravel.
 
-This is an evolving project. The current version focuses on:
-	•	Laravel application setup
-	•	MySQL database integration
-	•	Synchronization of products from the Salla store
-	•	Basic Box Builder functionality
+##  Project Overview
 
-Additional modules and features will be added as the project develops.
+This is an evolving project focusing on:
 
-⸻
+* **Laravel Application Architecture**: Robust backend setup using the Salla Starter Kit.
+* **Database Integration**: MySQL-driven product and user management.
+* **Product Synchronization**: Automated fetching of store items via the Salla API.
+* **Box Builder Interface**: A custom tool for creating product packages.
 
-Project Requirements
+---
 
-Before running the project, ensure you have:
-	•	PHP 8 or higher
-	•	Composer
-	•	Node.js and npm
-	•	MySQL
-	•	Git
+##  Project Requirements
 
-⸻
+Ensure your local environment meets these specifications:
 
-Local Setup Instructions
+* **PHP**: 8.1 or higher
+* **Package Managers**: Composer & npm
+* **Database**: MySQL
+* **Tools**: Git
 
-1. Clone the repository
+---
 
+## Local Setup Instructions
+
+### 1. Clone the Repository
+
+```bash
 git clone https://github.com/Esraaaak/Salla-Custom-Box.git
 cd Salla-Custom-Box
 
-2. Install dependencies
+```
 
-Install PHP and JavaScript dependencies:
+### 2. Install Dependencies
 
+```bash
 composer install
 npm install && npm run build
 
-3. Configure the environment
+```
 
-Copy the environment example file and generate the application key:
+### 3. Configure Environment
 
+Create your local environment file:
+
+```bash
 cp .env.example .env
 php artisan key:generate
 
-Open the .env file and configure your local database credentials:
+```
 
+**Edit `.env` and configure your database settings:**
+
+```env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -53,66 +65,61 @@ DB_DATABASE=salla_app
 DB_USERNAME=root
 DB_PASSWORD=your_password
 
-Ensure MySQL is running before proceeding.
+```
 
-⸻
+### 4. Database Setup
 
-Database Setup
+Initialize the database schema. This step is mandatory to create the `users` and `products` tables:
 
-Run the migrations to create the required tables:
-
+```bash
 php artisan migrate
 
+```
 
-⸻
+### 5. Synchronizing Products from Salla
 
-Synchronizing Products from Salla
+Pull your store's products into the local database to populate the builder dropdowns:
 
-The following command pulls products from the Salla store into your local database. These products are used in the Box Builder interface.
-
+```bash
 php artisan app:sync-products
 
-If prompted, confirm by typing yes.
-⸻
+```
 
-Running the Application
+*When prompted, type **yes** and hit Enter.*
 
-Start the Laravel development server:
+### 6. Running the Application
 
+Start the local development server:
+
+```bash
 php artisan serve
 
-Open the application in your browser:
+```
 
-http://127.0.0.1:8000
+Access the application at: `http://127.0.0.1:8000`
 
-Click Get Access Token to log in.
+---
 
-Note: To open the Box Builder page directly, use the following URL:
+## Troubleshooting & Usage Notes
 
-http://127.0.0.1:8000/box_builder.html
+### Accessing the Box Builder
 
+1. Visit `http://127.0.0.1:8000` and click **"LogIn"** to authenticate.
+2. The application is configured to redirect you to the builder automatically.
+3. Direct Link: `http://127.0.0.1:8000/box_builder.html`.
 
-⸻
+### Common Issues
 
-Troubleshooting
+* **Redirect/Login Issues**: Open Browser Inspector -> Storage -> Cookies. Delete `salla_demo_app_session` for `127.0.0.1` and refresh the page.
+* **Empty Product Lists**: Verify that `php artisan app:sync-products` completed successfully.
+* **Database Errors**: Ensure your MySQL server is running and the `DB_DATABASE` name in `.env` matches your local database.
 
-Redirect issues or incorrect page after login
+---
 
-Clear browser cookies for 127.0.0.1 and refresh the page.
+### Current Technology Stack
 
-Products not appearing in the builder
+* **Framework**: Laravel 10+
+* **Database**: MySQL
+* **Integration**: Salla API
+* **Frontend**: Custom Box Builder Interface (HTML/JavaScript)
 
-Ensure that:
-	•	You ran php artisan app:sync-products
-	•	Laravel is running on port 8000
-	•	Your database connection is correctly configured in .env
-
-⸻
-
-Current Technology Stack
-	•	Laravel
-	•	MySQL
-	•	Salla API integration
-	•	Custom Box Builder interface
-
-⸻
