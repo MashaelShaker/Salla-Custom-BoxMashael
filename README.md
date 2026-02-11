@@ -1,4 +1,4 @@
-Salla Custom Box – Laravel Starter Kit
+**Salla Custom Box – Laravel Starter Kit**
 
 This repository contains the initial implementation of the Custom Box Builder for Salla, built using Laravel.
 
