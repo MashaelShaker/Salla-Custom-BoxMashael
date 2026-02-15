@@ -15,6 +15,5 @@ class Deleted extends BaseAction
 {
     public function handle()
     {
-        // you can do whatever you want
-    }
+Product::where('id', $this->data['id'])->delete();    }
 }

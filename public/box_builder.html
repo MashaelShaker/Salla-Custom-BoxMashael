@@ -825,66 +825,53 @@
         // دالة جلب المنتجات من Laravel API
         // دالة جلب المنتجات من Laravel API
         // هذه الدالة تجلب جميع المنتجات من جميع الصفحات
-        async function fetchProducts() {
-            try {
-                let allProducts = [];
-                let currentPage = 1;
-                let hasMorePages = true;
+   async function fetchProducts() {
+    try {
+        let allProducts = [];
+        let currentPage = 1;
+        let hasMorePages = true;
 
-                // جلب جميع المنتجات من جميع الصفحات
-                while (hasMorePages) {
-                    const response = await fetch(`http://127.0.0.1:8000/api/products?per_page=1000&page=${currentPage}`, {
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    });
+        while (hasMorePages) {
+            // Fetch the specific page from Laravel
+            const response = await fetch(`http://127.0.0.1:8000/api/products?page=${currentPage}`, {
+                headers: { 'Accept': 'application/json' }
+            });
 
-                    if (!response.ok) {
-                        throw new Error('فشل الاتصال بالسيرفر');
-                    }
+            if (!response.ok) throw new Error('فشل الاتصال بالسيرفر');
 
-                    const result = await response.json();
-                    
-                    // إضافة المنتجات من الصفحة الحالية
-                    const products = result.data.map(product => ({
-                        id: product.id,
-                        name: product.name,
-                        price: parseFloat(product.price),
-                        image: product.image || 'https://via.placeholder.com/150'
-                    }));
-                    
-                    allProducts = [...allProducts, ...products];
+            const result = await response.json();
+            
+            // 1. Access the 'data' array provided by Laravel's paginator
+            const products = result.data.map(product => ({
+                id: product.id,
+                name: product.name,
+                price: parseFloat(product.price),
+                image: product.image_url || 'https://via.placeholder.com/150' // Use image_url
+            }));
+            
+            allProducts = [...allProducts, ...products];
 
-                    // التحقق من وجود صفحات إضافية
-                    // يمكن أن يكون الـ API يرجع meta أو links للـ pagination
-                    if (result.meta && result.meta.last_page) {
-                        hasMorePages = currentPage < result.meta.last_page;
-                    } else if (result.links && result.links.next) {
-                        hasMorePages = true;
-                    } else if (products.length < 1000) {
-                        // إذا كانت الصفحة تحتوي على أقل من 1000 منتج، فهذه آخر صفحة
-                        hasMorePages = false;
-                    } else {
-                        hasMorePages = false;
-                    }
-
-                    currentPage++;
-                    
-                    // حماية من infinite loop - نتوقف بعد 100 صفحة
-                    if (currentPage > 100) {
-                        console.warn('⚠️ تم الوصول إلى الحد الأقصى من الصفحات (100)');
-                        break;
-                    }
-                }
-
-                availableProducts = allProducts;
-                console.log(`✅ تم تحميل ${availableProducts.length} منتج من قاعدة البيانات`);
-
-            } catch (error) {
-                console.error("❌ خطأ:", error);
-                alert("تنبيه: لم يتمكن من جلب المنتجات. تأكد من تشغيل 'php artisan serve'");
+            // 2. Check Laravel's 'meta' to see if there's a next page
+            if (result.meta && result.current_page < result.last_page) {
+                currentPage++;
+            } else if (result.next_page_url) { // Standard Laravel pagination key
+                currentPage++;
+            } else {
+                hasMorePages = false;
             }
+
+            // Safety break
+            if (currentPage > 500) break;
         }
+
+        availableProducts = allProducts;
+        console.log(`✅ تم تحميل ${availableProducts.length} منتج من جميع الصفحات`);
+
+    } catch (error) {
+        console.error("❌ خطأ:", error);
+        alert("تنبيه: فشل جلب المنتجات.");
+    }
+}
 
         // تشغيل الدالة فور تحميل الصفحة
         window.addEventListener('DOMContentLoaded', fetchProducts);
