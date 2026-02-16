@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use App\Models\Product;
 
 class syncProducts extends Command
 {
@@ -24,50 +25,45 @@ class syncProducts extends Command
     /**
      * Execute the console command.
      */
- public function handle()
-{
-    $this->info("Starting sync...");
-    $totalSynced = 0;
-    $token = 'ory_at_L6NFfT4SrIphxiPi5kxLYRfJ89zEAL9Y-_k7Wcg4mTo.xWYp0AtNWRKTu373Q6L59OKNL4DaVbuhgIhamxROZ4g';
+    public function handle()
+    {
+        $this->info("Starting sync...");
+        // Get token from .env
+        $token = env('SALLA_API_KEY');
+        $totalSynced = 0;
 
-    // We will check the first 5 pages (100 products per page = 500 products)
-    for ($page = 1; $page <= 5; $page++) {
-        $this->comment("Fetching page $page...");
-        
-        $response = Http::withToken($token)
-            ->get("https://api.salla.dev/admin/v2/products", [
-                'per_page' => 100,
-                'page' => $page
-            ]);
+        $nextPageUrl = "https://api.salla.dev/admin/v2/products?per_page=100";
 
-        if ($response->successful()) {
-            $data = $response->json()['data'];
+        while ($nextPageUrl) {
+            $response = Http::withToken($token)->get($nextPageUrl);
 
-            // If the page is empty, we've reached the end of your store
-            if (empty($data)) {
-                break; 
+            if ($response->successful()) {
+                $result = $response->json();
+
+                foreach ($result['data'] as $item) {
+                    $product = Product::updateOrCreate(
+                        ['salla_product_id' => $item['id']],
+                        [
+                            'name'           => $item['name'],
+                            'description'    => $item['description'] ?? '',
+                            'price'          => $item['price']['amount'] ?? 0,
+                            'stock_quantity' => $item['quantity'] ?? 0,
+                            'image_url'      => $item['main_image'] ?? '',
+                        ]
+                    );
+                    $product->external_id = 'PRDO-' . $product->id . '-SALLA-' . $item['id'];
+                    $product->save();
+
+                    $totalSynced++;
+                }
+                // Move to the next page if it exists
+                $nextPageUrl = $result['pagination']['links']['next'] ?? null;
+            } else {
+                $this->error("Error in fetching: " . $response->body());
+                break;
             }
-
-            foreach ($data as $item) {
-                \App\Models\Product::updateOrCreate(
-                    ['id' => $item['id']],
-                    [
-                        'name'           => $item['name'],
-                        'description'    => $item['description'] ?? '',
-                        'price'          => $item['price']['amount'] ?? 0,
-                        'stock_quantity' => $item['quantity'] ?? 0,
-                        'image_url'      => $item['main_image'] ?? '',
-                    ]
-                );
-                $totalSynced++;
-            }
-        } else {
-            $this->error("Failed to fetch page $page");
-            break;
         }
+
+        $this->info("Done! Synced $totalSynced products successfully.");
     }
-
-    $this->info("Success! Finished syncing $totalSynced products.");
-}
-
 }
