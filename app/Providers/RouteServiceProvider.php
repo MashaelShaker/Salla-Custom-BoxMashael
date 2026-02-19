@@ -33,7 +33,7 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @return void
      */
-   public function boot(): void
+   public function boot(): void //tells laravel where too look for routes
 {
     $this->routes(function () {
         Route::middleware('api')
@@ -54,6 +54,7 @@ class RouteServiceProvider extends ServiceProvider
     {
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
+            // there was a problem in the speed limit here so we neneed this  
         });
     }
 }
