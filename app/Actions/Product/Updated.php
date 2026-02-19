@@ -14,19 +14,24 @@ class Updated extends BaseAction
         $this->data = $data;
     }
 
-    public function handle()
-    {
+
         // 2. Use $this->data to save the product
-        return Product::updateOrCreate(
-            ['id' => $this->data['id']],
-            [
-                'name'           => $this->data['name'] ?? '',
-                'description'    => $this->data['description'] ?? '',
-                'price'          => $this->data['price']['amount'] ?? 0,
-                'stock_quantity' => $this->data['quantity'] ?? 0,
-                'image_url'      => $this->data['main_image'] ?? null,
-                'salla_product_id' => $this->data['id'],
-            ]
-        );
-    }
+   public function handle()
+{
+    $product = Product::updateOrCreate(
+        ['salla_product_id' => $this->data['id']],
+        [
+            'name'           => $this->data['name'] ?? '',
+            'description'    => $this->data['description'] ?? '',
+            'price'          => $this->data['price']['amount'] ?? 0,
+            'stock_quantity' => $this->data['quantity'] ?? 0,
+            'image_url'      => $this->data['main_image'] ?? '',
+        ]
+    );
+
+    $product->external_id = 'PRDO-' . $product->id . '-SALLA-' . $this->data['id'];
+    $product->save();
+
+    return $product;
 }
+    }
