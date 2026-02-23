@@ -10,12 +10,17 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::create('packages', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
-    }
+{
+    Schema::create('packages', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('box_id')->constrained('boxes')->onDelete('cascade');
+        $table->string('package_name', 255);
+        $table->string('product_name', 255);
+        $table->decimal('product_price', 10, 2);
+        $table->string('product_image', 255);
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.

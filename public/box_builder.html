@@ -1,3 +1,4 @@
+<!-- تم التعديل -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -752,16 +753,6 @@
                         <label class="form-label" for="package-description">وصف الباقة (اختياري)</label>
                         <textarea id="package-description" class="form-textarea" placeholder="أضف وصفاً للباقة..."></textarea>
                     </div>
-
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="package-active" class="checkbox-input" checked>
-                        <label for="package-active" class="checkbox-label">الباقة نشطة</label>
-                    </div>
-
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="package-featured" class="checkbox-input">
-                        <label for="package-featured" class="checkbox-label">باقة مميزة</label>
-                    </div>
                 </div>
             </div>
 
@@ -808,7 +799,7 @@
             <i class="s-icon sicon-eye"></i>
             معاينة كاملة
         </button>
-        <button class="btn btn-primary" onclick="savePackage()">
+        <button class="btn btn-primary" onclick="savePackage(event)">
             <i class="s-icon sicon-save"></i>
             حفظ الباقة
         </button>
@@ -851,10 +842,8 @@
             
             allProducts = [...allProducts, ...products];
 
-            // 2. Check Laravel's 'meta' to see if there's a next page
-            if (result.meta && result.current_page < result.last_page) {
-                currentPage++;
-            } else if (result.next_page_url) { // Standard Laravel pagination key
+            // 2. Check Laravel's pagination to see if there's a next page
+            if (result.current_page < result.last_page) {
                 currentPage++;
             } else {
                 hasMorePages = false;
@@ -1127,9 +1116,19 @@
             }
         }
 
-        function savePackage() {
+        function getCsrfToken() {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta && meta.content) return meta.content;
+            const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+            return match ? decodeURIComponent(match[1]) : null;
+        }
+
+        async function savePackage(event) {
             const packageName = document.getElementById('package-name').value;
             const packagePrice = document.getElementById('package-price').value;
+            const packageDescription = document.getElementById('package-description').value || 'بدون وصف';
+            const imageInput = document.getElementById('package-image-input');
+            const imageFile = imageInput && imageInput.files ? imageInput.files[0] : null;
 
             if (!packageName) {
                 alert('يرجى إدخال اسم الباقة');
@@ -1152,28 +1151,82 @@
                 return;
             }
 
+            const activeCheckbox = document.getElementById('package-active');
+            const featuredCheckbox = document.getElementById('package-featured');
             const packageData = {
                 name: packageName,
                 price: parseFloat(packagePrice),
                 elements: packageElements,
-                active: document.getElementById('package-active').checked,
-                featured: document.getElementById('package-featured').checked
+                active: activeCheckbox ? activeCheckbox.checked : false,
+                featured: featuredCheckbox ? featuredCheckbox.checked : false
             };
 
             console.log('بيانات الباقة:', packageData);
             
-            const btn = event.target;
+            const btn = event && event.target
+                ? event.target
+                : document.querySelector('button.btn.btn-primary[onclick^="savePackage"]');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="s-icon sicon-loading sicon-is-spinning"></i> جاري الحفظ...';
             btn.disabled = true;
 
-            setTimeout(() => {
+            try {
+                // تجهيز البيانات للإرسال مع الصورة إن وجدت
+                const formData = new FormData();
+                formData.append('name', packageName);
+                formData.append('price', parseFloat(packagePrice));
+                formData.append('description', packageDescription);
+                if (imageFile) {
+                    formData.append('image', imageFile);
+                }
+
+                const normalizedElements = packageElements.map(element => ({
+                    name: element.name || 'عنصر بدون اسم',
+                    products: element.products.map(product => ({
+                        name: product.name,
+                        price: product.price,
+                        image: product.image || ''
+                    }))
+                }));
+
+                formData.append('elements', JSON.stringify(normalizedElements));
+
+                // طباعة البيانات المرسلة للتحقق
+                console.log('البيانات المرسلة:', {
+                    name: packageName,
+                    price: parseFloat(packagePrice),
+                    description: packageDescription,
+                    elements: normalizedElements,
+                    imageFile: imageFile ? imageFile.name : 'بدون صورة'
+                });
+
+                const csrfToken = getCsrfToken();
+                const response = await fetch('/boxes', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}
+                });
+
+                const responseData = await response.json();
+                console.log('ردّ السيرفر:', responseData);
+
+                if (!response.ok) {
+                    console.error('فشل الحفظ:', responseData);
+                    alert('خطأ: ' + (responseData.message || JSON.stringify(responseData)));
+                    return;
+                }
+
                 btn.innerHTML = '<i class="s-icon sicon-check-circle"></i> تم الحفظ بنجاح';
+            } catch (error) {
+                console.error('خطأ غير متوقع:', error);
+                alert('حصل خطأ غير متوقع: ' + error.message);
+            } finally {
                 setTimeout(() => {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
-                }, 2000);
-            }, 1500);
+                }, 1500);
+            }
         }
 
         function previewPackage() {

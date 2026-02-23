@@ -1,4 +1,5 @@
 <?php
+// تم التعديل
 
 namespace App\Http\Middleware;
 
@@ -12,6 +13,8 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        'api/webhook',//telling laravel its ok to let requests from this api in
+        'api/webhook',  // استثناء طلبات الـ Webhook من Salla
+        'boxes',        // استثناء مسار حفظ الباقات
+        'packages',     // استثناء مسار حفظ العناصر
     ];
 }

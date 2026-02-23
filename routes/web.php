@@ -1,7 +1,10 @@
 <?php
+// تم التعديل
 
+use App\Http\Controllers\BoxController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OAuthController;
+use App\Http\Controllers\PackageController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +26,12 @@ Route::get('/', function () {
 Route::get('/dashboard', DashboardController::class)->middleware(['auth'])->name('dashboard');
 
 Auth::routes();
+
+// مسار حفظ الباقة مع عناصرها ومنتجاتها
+Route::post('/boxes', [BoxController::class, 'store'])->name('boxes.store');
+
+// مسار حفظ عنصر واحد مع منتجاته وربطه بباقة موجودة
+Route::post('/packages', [PackageController::class, 'store'])->name('packages.store');
 
 
 // Salla Auth OAuth routes
