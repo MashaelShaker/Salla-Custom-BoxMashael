@@ -51,10 +51,8 @@ class BoxController extends Controller
                 foreach ($element['products'] as $product) {
                     Package::create([
                         'box_id' => $box->id,
-                        'package_name' => $element['name'],
-                        'product_name' => $product['name'],
-                        'product_price' => $product['price'],
-                        'product_image' => substr($product['image'] ?? '', 0, 255),
+                        'product_id' => $element['product_id'] ?? null,
+                     
                     ]);
                 }
             }

@@ -834,7 +834,7 @@
             
             // 1. Access the 'data' array provided by Laravel's paginator
             const products = result.data.map(product => ({
-                id: product.id,
+                id: product.internal_id, // Assuming 'internal_id' is the unique identifier for products
                 name: product.name,
                 price: parseFloat(product.price),
                 image: product.image_url || 'https://via.placeholder.com/150' // Use image_url
@@ -1183,6 +1183,7 @@
                 const normalizedElements = packageElements.map(element => ({
                     name: element.name || 'عنصر بدون اسم',
                     products: element.products.map(product => ({
+                        product_id: product.internal_id,
                         name: product.name,
                         price: product.price,
                         image: product.image || ''
